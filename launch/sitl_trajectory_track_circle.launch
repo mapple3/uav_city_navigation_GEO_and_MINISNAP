@@ -1,0 +1,81 @@
+<launch>
+  <arg name="mav_name" default="iris"/>
+  <arg name="fcu_url" default="udp://:14540@127.0.0.1:14557"/>
+  <arg name="gcs_url" default="" />
+  <arg name="tgt_system" default="1" />
+  <arg name="tgt_component" default="1" />
+  <arg name="command_input" default="2" />
+  <arg name="command_input_mine" default="0" />
+  <arg name="gazebo_simulation" default="true" />
+  <arg name="visualization" default="false"/>
+  <arg name="log_output" default="screen" />
+  <arg name="fcu_protocol" default="v2.0" />
+  <arg name="respawn_mavros" default="false" />
+  <arg name="spawn_x" default="0.0"/>
+  <arg name="spawn_y" default="0.0"/>
+  <arg name="spawn_z" default="1.0"/>
+
+  <env name="GAZEBO_MODEL_PATH" value="$(find uav_city_navigation)/models:$(optenv GAZEBO_MODEL_PATH)" />
+
+  <node pkg="uav_city_navigation" type="geometric_controller_node" name="geometric_controller" output="screen">
+    <param name="mav_name" type="string" value="$(arg mav_name)" />
+    <remap from="command/bodyrate_command" to="/mavros/setpoint_raw/attitude"/>
+    <param name="ctrl_mode" value="$(arg command_input)" />
+    <param name="ctrl_mode_mine" value="$(arg command_input_mine)" />
+    <param name="enable_sim" value="$(arg gazebo_simulation)" />
+    <param name="enable_gazebo_state" value="true"/>
+    <param name="velocity_yaw" value="true" />
+    
+    <param name="posehistory_window" value="20000" />
+    <param name="max_acc" value="5.0" />
+    <param name="attctrl_constant" value="0.3"/>
+    <param name="normalizedthrust_constant" value="0.06"/>
+    <param name="normalizedthrust_offset" value="0.1"/>
+    <param name="Kp_x" value="5.0" />
+    <param name="Kp_y" value="5.0" />
+    <param name="Kp_z" value="10.0" />
+    <param name="Kv_x" value="5.0"/>
+    <param name="Kv_y" value="5.0"/>
+    <param name="Kv_z" value="10.0"/>
+
+    <param name="Omegad_x" value="0.30" />
+    <param name="Omegad_y" value="0.0" />
+    <param name="Omegad_z" value="0.75" />
+    <param name="Kperp" value="1.75" />
+    <param name="Kpapral" value="0.4" />
+    <param name="radius" value="5.0" />
+
+    <param name="k2_" value="0.3" />
+    <param name="k3_" value="0.5" />
+    <param name="k4_" value="0.6" />
+
+    <param name="spawn_x" value="$(arg spawn_x)"/>
+    <param name="spawn_y" value="$(arg spawn_y)"/>
+    <param name="spawn_z" value="$(arg spawn_z)"/>
+  </node>
+
+  <include file="$(find mavros)/launch/node.launch">
+    <arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
+    <arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
+    <arg name="fcu_url" value="$(arg fcu_url)" />
+    <arg name="gcs_url" value="$(arg gcs_url)" />
+    <arg name="tgt_system" value="$(arg tgt_system)" />
+    <arg name="tgt_component" value="$(arg tgt_component)" />
+    <arg name="log_output" value="$(arg log_output)" />
+    <arg name="fcu_protocol" value="$(arg fcu_protocol)" />
+    <arg name="respawn_mavros" default="$(arg respawn_mavros)" />
+  </include>
+
+  <include file="$(find px4)/launch/posix_sitl.launch">
+    <arg name="vehicle" value="$(arg mav_name)"/>
+    <arg name="world" value="$(find uav_city_navigation)/worlds/city_osm_roundabout_mine.world"/>
+    <arg name="x" value="$(arg spawn_x)"/>
+    <arg name="y" value="$(arg spawn_y)"/>
+    <arg name="z" value="$(arg spawn_z)"/>
+  </include>
+
+  <group if="$(arg visualization)">
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find uav_city_navigation)/rviz/config_file.rviz" />
+  </group>
+
+</launch>

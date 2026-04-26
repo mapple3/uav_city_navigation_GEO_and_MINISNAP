@@ -1,0 +1,23 @@
+<launch>
+
+  <node pkg="uav_city_navigation" type="trajectory_generator_node" name="trajectory_generator_node" output="screen" required="true">
+      <remap from="~waypoints" to="/waypoint_generator/waypoints"/>
+      <remap from="~odom" to="/mavros/local_position/odom"/>
+      <remap from="~joy" to="/djiros/rc"/>
+      
+      <param name="planning/vel" value="2.0" />
+      <param name="planning/acc" value="2.0" />
+      <param name="planning/dev_order" value="4" />
+      <param name="planning/min_order" value="3" />
+      <param name="vis/vis_traj_width" value="0.15" />
+  </node>
+
+  <node pkg="uav_city_navigation" name="waypoint_generator" type="waypoint_generator_node" output="screen">        
+      <remap from="~goal" to="/goal"/>
+      <remap from="~odom" to="/mavros/local_position/odom"/>
+      <param name="waypoint_type" value="manual"/>
+  </node>
+
+  <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find uav_city_navigation)/rviz/test_traj.rviz" />
+
+</launch>
